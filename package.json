@@ -1,0 +1,19 @@
+{
+  "name": "department_of_conservation_tracks",
+  "version": "0.0.1",
+  "description": "A data collection of GeoJSON files exported from DOC's ArcGIS REST API and converted to WGS84 for mapping.",
+  "main": "export.js",
+  "dependencies": {
+    "esri2geo": "*",
+    "proj4geojson": "*"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/joshmcarthur/department_of_conservation_tracks.git"
+  },
+  "author": "Josh McArthur",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/joshmcarthur/department_of_conservation_tracks/issues"
+  }
+}
