@@ -5,7 +5,8 @@
   "main": "export.js",
   "dependencies": {
     "esri2geo": "*",
-    "proj4geojson": "*"
+    "proj4geojson": "*",
+    "graceful-fs": "*"
   },
   "repository": {
     "type": "git",
