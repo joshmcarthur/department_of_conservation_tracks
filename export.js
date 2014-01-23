@@ -6,6 +6,10 @@
 (function() {
   var http = require('http');
   var fs   = require('fs');
+  var esri2geo = require('esri2geo');
+  var transform = require('proj4geojson');
+
+  var sourceProjectionString = "+proj=tmerc +lat_0=0 +lon_0=173 +k=0.9996 +x_0=1600000 +y_0=10000000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs";
 
   function queryLayer(callback) {
     console.log("Loading all feature IDs...")
@@ -25,7 +29,7 @@
   }
 
   function logFeature(feature_id, current, total) {
-    console.log("Saving Feature #" + feature_id + " (" + current + " of " + total + ")\n");
+    console.log("Queueing Feature #" + feature_id + " (" + current + " of " + total + ")\n");
   }
 
   function saveFeature(feature_id) {
@@ -37,16 +41,7 @@
       function(response) {
         var data = ''
         response.on('data', function(chunk) { data += chunk })
-        response.on('end', function() {
-          var filename = generateFilename(feature_id)
-          fs.writeFile(filename, data, function(err) {
-            if (err) {
-              console.log("Error saving feature #" + feature_id + ": " + err);
-            } else {
-              console.log("Saved to " + filename);
-            }
-          });
-        });
+        response.on('end', function() { writeGeoJSON(data); });
       }
     ).end();
 
@@ -54,7 +49,35 @@
   }
 
   function generateFilename(feature_id) {
-    return "feature_" + feature_id.toString().replace(/\W/, '_') + ".json"
+    return "tracks/track_" + feature_id.toString().replace(/\W/, '_') + ".geojson"
+  }
+
+  function prepareGeoJSON(esriFeature) {
+    var geojson = {
+      type: "Feature",
+      properties: esriFeature.feature.attributes,
+      geometry: function(paths) {
+        if (paths.length === 1) {
+          return {type: "LineString", coordinates: paths[0]};
+        } else {
+          return {type: "MultiLineString", coordinates: paths};
+        }
+      }(esriFeature.feature.geometry.paths)
+    }
+
+    return transform.to(geojson, sourceProjectionString);
+  }
+
+  function writeGeoJSON(response) {
+    if(typeof response === "string") { response = JSON.parse(response); }
+    var geojson = prepareGeoJSON(response);
+    var filename = generateFilename(geojson.properties.OBJECTID);
+
+    fs.writeFile(
+      filename,
+      JSON.stringify(geojson),
+      function(err) { console.log(err ? ("Error saving feature " + JSON.stringify(json) + ": " + err) : ("Saved to " + filename)); }
+    );
   }
 
   queryLayer(function(feature_ids) {
