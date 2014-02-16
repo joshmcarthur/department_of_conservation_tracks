@@ -4,27 +4,12 @@
  */
 
 (function() {
-  var fs = require('graceful-fs');
   var source_directory = "./tracks/";
   var output_filename = "all_tracks.geojson"
+  var helpers = require('./helpers');
+  var fs = require('graceful-fs');
 
-  function collectFeatures() {
-    var features = [];
 
-    var json_files = fs.readdirSync(source_directory)
-    json_files.forEach(function(file) {
-      // Move onto the next file if it does not have an
-      // extension of GeoJSON
-      if (!/\.geojson$/.test(file)) return;
-
-      contents = fs.readFileSync(source_directory + file, 'utf-8')
-      features.push(JSON.parse(contents));
-    });
-
-    console.log(features.length);
-
-    return features;
-  }
 
   function skeletonFeatureCollection() {
     return {
@@ -41,7 +26,7 @@
 
   function concat_geojson() {
     var base = skeletonFeatureCollection();
-    base.features = collectFeatures();
+    base.features = helpers.collectFeatures(source_directory);
 
     fs.writeFile(
       output_filename,
