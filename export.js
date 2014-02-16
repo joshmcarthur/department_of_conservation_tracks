@@ -65,7 +65,20 @@
       }(esriFeature.feature.geometry.paths)
     }
 
-    return transform.to(geojson, sourceProjectionString);
+    // ESRI coordinates seem to be longitude-latitude, and the transformation
+    // breaks if this is reversed. For this reason, we transform in-place, and
+    // then reverse the order.
+
+    var transformed = transform.to(geojson, sourceProjectionString);
+    if (transformed.geometry.type == "MultiLineString") {
+      transformed.geometry.coordinates.forEach(function(coordinates) {
+        processCoordinatesArray(coordinates);
+      });
+    } else {
+      processCoordinatesArray(transformed.geometry.coordinates);
+    }
+
+    return transformed;
   }
 
   function writeGeoJSON(response) {
@@ -78,6 +91,14 @@
       JSON.stringify(geojson),
       function(err) { console.log(err ? ("Error saving feature " + JSON.stringify(json) + ": " + err) : ("Saved to " + filename)); }
     );
+  }
+
+  function processCoordinatesArray(coordinatesArray) {
+    coordinatesArray.forEach(function(coordinatePair) {
+      coordinatePair.reverse();
+    });
+
+    return coordinatesArray;
   }
 
   queryLayer(function(feature_ids) {
